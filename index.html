@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1b3a8a">
+<meta name="color-scheme" content="light dark">
+<title>Translato</title>
+<style>
+  :root{--bg:#f6f8fb;--card:#fff;--ink:#16202e;--mute:#5b6677;--acc:#2459d6;--line:#e3e8ef;--chip:#eaf0fe;--err:#c0262d}
+  @media(prefers-color-scheme:dark){:root{--bg:#0e141c;--card:#18212d;--ink:#e8edf4;--mute:#9aa7b8;--acc:#6b9cff;--line:#2a3646;--chip:#1f2e4d;--err:#ff8a8f}.primary{color:#0e141c!important}}
+  :focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+  button{-webkit-tap-highlight-color:transparent}button:active{transform:scale(.97)}
+  #daily{display:flex;flex-wrap:wrap;gap:8px}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+  header{height:180px;position:relative;overflow:hidden}
+  header svg{position:absolute;inset:0;width:100%;height:100%}
+  header{padding-top:env(safe-area-inset-top)}
+  header h1{position:absolute;left:max(24px,env(safe-area-inset-left));bottom:40px;line-height:1.1;margin:0;color:#fff;font-size:34px;text-shadow:0 1px 3px #000a,0 2px 12px #0008;z-index:1}
+  main{max-width:720px;margin:-24px auto 40px;padding:0 16px;position:relative}
+  .card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 10px #0001}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  select,button,textarea{font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);color:var(--ink)}
+  button{cursor:pointer}button:hover{border-color:var(--acc)}
+  .primary{background:var(--acc);color:#fff;border:0;padding:10px 18px}
+  .mic.on{background:#e5484d;color:#fff;border-color:#e5484d}
+  textarea{width:100%;height:90px;resize:vertical;margin:10px 0}
+  #out{min-height:50px;font-size:20px;padding:8px 0}
+  h2{font-size:15px;margin:0 0 10px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+  .chip{min-height:44px;padding:10px 14px;border-radius:99px;background:var(--chip);color:var(--acc);cursor:pointer;border:0}
+  .h{padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+  .h small{color:var(--mute)}
+  #err{color:var(--err)}
+  select,button,textarea{min-height:46px;font-size:16px;touch-action:manipulation}
+  .row select{flex:1;min-width:0}
+  #swap{flex:0 0 auto}
+  .mic,.primary{flex:1}
+  #voice{flex:1 1 100%}
+  body{-webkit-text-size-adjust:100%;padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  textarea{min-height:90px}
+  @media(max-width:520px){
+    header{height:130px}
+    header h1{font-size:28px;bottom:36px}
+    main{padding:0 12px}
+    .card{padding:14px}
+    #play{flex:1}
+    .chip{padding:10px 14px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <svg viewBox="0 0 800 180" preserveAspectRatio="xMidYMid slice">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b3a8a"/><stop offset=".6" stop-color="#f08a5d"/><stop offset="1" stop-color="#f9c97c"/></linearGradient></defs>
+    <rect width="800" height="180" fill="url(#g)"/>
+    <circle cx="620" cy="110" r="34" fill="#fff4c9" opacity=".9"/>
+    <g fill="#fff" opacity=".8"><ellipse cx="150" cy="45" rx="50" ry="10"/><ellipse cx="190" cy="38" rx="35" ry="9"/><ellipse cx="480" cy="62" rx="55" ry="9"/></g>
+    <path d="M0 180V140l50-15 40 20 60-35 50 25 70-40 60 30 80-25 70 30 90-35 60 25 70-20 100 25v45z" fill="#16202e" opacity=".85"/>
+    <g transform="translate(300 70) rotate(-12)" fill="#fff"><path d="M0 0l60 8 14-8 6 3-10 7 10 5-6 3-14-6-60 6z"/></g>
+  </svg>
+  <h1>Translato</h1>
+</header>
+<main>
+  <div class="card">
+    <div class="row">
+      <select id="src" aria-label="From language"></select>
+      <button id="swap" aria-label="Swap languages" title="Swap languages"><span aria-hidden="true">⇄</span></button>
+      <select id="dst" aria-label="To language"></select>
+    </div>
+    <textarea id="in" aria-label="Text to translate" placeholder="Type or press the mic and speak…"></textarea>
+    <div class="row">
+      <button class="mic" id="mic" aria-pressed="false"><span aria-hidden="true">🎤</span> Speak</button>
+      <button class="primary" id="go">Translate</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Result</h2>
+    <div id="out" aria-live="polite"></div><div id="err" role="alert"></div>
+    <div class="row">
+      <button id="play"><span aria-hidden="true">🔊</span> Listen</button>
+      <select id="voice" aria-label="Voice"></select>
+    </div>
+  </div>
+
+  <div class="card"><h2>Try today's phrases</h2><div id="daily"></div></div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between"><h2>History</h2><button id="clr">Clear</button></div>
+    <div id="hist"></div>
+  </div>
+</main>
+<script>
+const LANGS={en:'English',de:'German',fr:'French',es:'Spanish',it:'Italian',pt:'Portuguese',nl:'Dutch',ja:'Japanese',zh:'Chinese',ar:'Arabic'};
+const BCP={en:'en-US',de:'de-DE',fr:'fr-FR',es:'es-ES',it:'it-IT',pt:'pt-PT',nl:'nl-NL',ja:'ja-JP',zh:'zh-CN',ar:'ar-SA'};
+const PHRASES=["Where is the train station?","How much does this cost?","I would like a coffee, please","Can you help me?","What time is it?","The bill, please","I am lost","Nice to meet you","Where is the bathroom?","Do you speak English?","I am allergic to nuts","Thank you very much","What do you recommend?","How do I get to the airport?","It's delicious!","Good morning, how are you?","I need a doctor","One ticket, please","Is there Wi-Fi here?","See you tomorrow"];
+const $=id=>document.getElementById(id);
+const opts=Object.entries(LANGS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+$('src').innerHTML=opts;$('dst').innerHTML=opts;$('src').value='en';$('dst').value='de';
+
+// daily suggestions: 5 phrases rotated by day
+const day=Math.floor(Date.now()/864e5);
+$('daily').innerHTML=[0,1,2,3,4].map(i=>PHRASES[(day*5+i)%PHRASES.length]).map(p=>`<button class="chip">${p}</button>`).join('');
+$('daily').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;unlockTTS();$('src').value='en';if($('dst').value==='en')$('dst').value='de';loadVoices();$('in').value=c.textContent;translate();};
+$('in').maxLength=500;
+const TTS='speechSynthesis' in window;
+if(!TTS){$('play').hidden=true;$('voice').hidden=true;}
+function unlockTTS(){if(!TTS)return;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch{}}
+
+// translate
+let reqId=0;
+async function translate(){
+  const q=$('in').value.trim();if(!q)return;
+  const s=$('src').value,d=$('dst').value,my=++reqId;$('err').textContent='';$('out').textContent='…';
+  if(s===d){$('out').textContent=q;return;}
+  try{
+    const r=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(q)}&langpair=${s}|${d}`);
+    if(!r.ok)throw new Error('Service unavailable ('+r.status+')');
+    const j=await r.json();
+    if(my!==reqId)return;
+    const t=j.responseData&&j.responseData.translatedText;
+    if(Number(j.responseStatus)!==200||!t)throw new Error(j.responseDetails||'Translation failed');
+    if(/MYMEMORY WARNING|QUERY LENGTH LIMIT/i.test(t))throw new Error('Daily translation quota reached or text too long. Try again later.');
+    $('out').textContent=t;$('out').lang=d;$('out').dir=d==='ar'?'rtl':'ltr';addHist({q,t,s,d});speak(t,d);
+  }catch(e){
+    if(my!==reqId)return;
+    $('out').textContent='';$('err').textContent=e instanceof TypeError?'Network error – are you online?':e.message;
+  }
+}
+$('go').onclick=()=>{unlockTTS();translate();};
+$('swap').onclick=()=>{reqId++;const s=$('src').value,o=$('out').textContent;$('src').value=$('dst').value;$('dst').value=s;if(o&&o!=='…')$('in').value=o;$('out').textContent='';loadVoices();};
+
+// mic
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec;
+$('mic').onclick=()=>{
+  if(!SR){$('err').textContent='Speech input is not supported in this browser (try Chrome, Edge or Safari).';return;}
+  unlockTTS();
+  if(rec){rec.stop();return;}
+  $('err').textContent='';
+  rec=new SR();rec.lang=BCP[$('src').value];rec.interimResults=false;rec.continuous=false;
+  rec.onstart=()=>{$('mic').classList.add('on');$('mic').setAttribute('aria-pressed','true');};
+  rec.onresult=e=>{$('in').value=e.results[0][0].transcript;translate();};
+  rec.onerror=e=>{if(e.error!=='no-speech'&&e.error!=='aborted')$('err').textContent='Mic error: '+e.error;};
+  rec.onend=()=>{$('mic').classList.remove('on');$('mic').setAttribute('aria-pressed','false');rec=null;};
+  try{rec.start();}catch{rec=null;$('err').textContent='Mic unavailable';}
+};
+
+// voices
+function loadVoices(){
+  if(!TTS)return;
+  const l=$('dst').value,vs=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().replace('_','-').startsWith(l));
+  $('voice').innerHTML='';
+  (vs.length?vs.map(v=>new Option(v.name,v.name)):[new Option('(default voice)','')]).forEach(o=>$('voice').add(o));
+}
+if(TTS){speechSynthesis.onvoiceschanged=loadVoices;$('dst').onchange=loadVoices;
+  let tries=0;(function poll(){loadVoices();if(!speechSynthesis.getVoices().length&&tries++<20)setTimeout(poll,250);})();}
+function speak(t=$('out').textContent,l=$('dst').value){
+  if(!TTS||!t||t==='…')return;
+  const u=new SpeechSynthesisUtterance(t);u.lang=BCP[l];
+  const v=l===$('dst').value&&speechSynthesis.getVoices().find(v=>v.name===$('voice').value);if(v)u.voice=v;
+  speechSynthesis.cancel();speechSynthesis.speak(u);
+}
+$('play').onclick=()=>speak();
+
+// history
+let hist=[];try{const p=JSON.parse(localStorage.hist||'[]');if(Array.isArray(p))hist=p.filter(h=>h&&LANGS[h.s]&&LANGS[h.d]&&typeof h.q==='string'&&typeof h.t==='string');}catch{}
+function save(){try{localStorage.hist=JSON.stringify(hist)}catch{}}
+function addHist(h){hist.unshift(h);hist=hist.slice(0,50);save();renderHist();}
+function renderHist(){
+  $('hist').innerHTML=hist.length?hist.map((h,i)=>`<div class="h" tabindex="0" role="button" data-i="${i}"><small>${LANGS[h.s]} → ${LANGS[h.d]}</small><br>${esc(h.q)} <b>→ ${esc(h.t)}</b></div>`).join(''):'<small>Nothing yet.</small>';
+}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function pickHist(e){const el=e.target.closest('.h');if(!el)return;const h=hist[el.dataset.i];reqId++;$('src').value=h.s;$('dst').value=h.d;$('in').value=h.q;$('out').textContent=h.t;$('out').lang=h.d;$('out').dir=h.d==='ar'?'rtl':'ltr';loadVoices();}
+$('hist').onclick=pickHist;
+$('hist').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pickHist(e);}};
+$('clr').onclick=()=>{hist=[];save();renderHist();};
+renderHist();
+</script>
+</body>
+</html>
